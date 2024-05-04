@@ -12,6 +12,13 @@ export interface ApiResult {
 	info: Info;
 }
 
+export enum SORTBY {
+	NONE = 'none',
+	NAME = 'name',
+	LAST = 'last',
+	COUNTRY = 'country',
+}
+
 export interface User {
 	gender: string;
 	name: Name;

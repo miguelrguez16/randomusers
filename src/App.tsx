@@ -1,8 +1,14 @@
+import axios, { AxiosError, AxiosResponse } from 'axios';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './App.css';
-import { Spinner } from './assets/Spinner';
 import { UserTable } from './components/UsersTable';
 import { SORTBY, type User } from './types.d';
+
+const fetchUsers = async (page: number) => {
+	return await axios
+		.get(`https://randomuser.me/api/?seed=mrg&results=10&page=${page}`)
+		.then((response: AxiosResponse) => response.data.result);
+};
 
 const App = () => {
 	const [users, setUsers] = useState<User[]>([]);
@@ -12,16 +18,24 @@ const App = () => {
 	const originalUsers = useRef<User[]>();
 	// useRef para guardar un valor que queremos que se comparta entre renderizados
 	// pero que al cambiar, no vuelva a renderizar el componente
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState(false);
+	const [currentPage, setCurrentPage] = useState(1);
 
 	useEffect(() => {
-		fetch('https://randomuser.me/api/?results=100')
-			.then(async (res) => await res.json())
-			.then((json) => {
-				setUsers(json.results);
-				originalUsers.current = json.results;
+		setLoading(true);
+
+		fetchUsers(currentPage)
+			.then((response) => {
+				setUsers((prevUsers) => prevUsers.concat(response));
+				originalUsers.current = originalUsers.current?.concat(response.data.results);
 			})
-			.catch((e) => console.error(e));
-	}, []);
+			.catch((err: AxiosError) => {
+				setError(true);
+				console.log('Error fetching users', err.cause);
+			})
+			.finally(() => setLoading(false));
+	}, [currentPage]);
 
 	const toggleColors = () => setShowColors((previousValue) => !previousValue);
 
@@ -43,10 +57,6 @@ const App = () => {
 
 	// const notCorrectSortedUsers = shortByCountry ?
 	// users.sort((userA, userB) => { EL SORT MUTA EL ESTADO ORIGINAL NO SE PUEDE VOLVER A TOCAR
-	// 	return userA.location.country.localeCompare(userB.location.country);
-	// }) : users;
-
-	// const notCorrectSortedUsers = shortByCountry ?
 	// [...users].sort((userA, userB) => { MEJOR UNA COPIA
 	// 	return userA.location.country.localeCompare(userB.location.country);
 	// }) : users;
@@ -87,15 +97,22 @@ const App = () => {
 				</div>
 			)}
 			<main>
-				{users && (
-					<UserTable
-						handleChangeSort={handleChangeSort}
-						users={sortedUsers}
-						showColor={showColors}
-						deleteUser={handleDelete}
-					/>
+				{users.length > 0 && (
+					<>
+						<UserTable
+							handleChangeSort={handleChangeSort}
+							users={sortedUsers}
+							showColor={showColors}
+							deleteUser={handleDelete}
+						/>
+						<button onClick={() => setCurrentPage((prevValue) => prevValue + 1)}>
+							Cargar más resultados
+						</button>
+					</>
 				)}
-				{!users && <Spinner />}
+				{loading && <p>Cargando ...</p>}
+				{error && <p>Ha habido un error</p>}
+				{!loading && !error && users.length === 0 && <p>No hay usuarios</p>}
 			</main>
 		</div>
 	);

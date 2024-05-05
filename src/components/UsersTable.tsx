@@ -32,7 +32,7 @@ export const UserTable = ({ users, showColor, deleteUser, handleChangeSort }: Pr
 					return (
 						<tr key={user.login.uuid}>
 							<td>
-								<img src={user.picture.thumbnail} />
+								<img src={user.picture.thumbnail} loading="lazy" />
 							</td>
 							<td>{user.name.first}</td>
 							<td>{user.name.last}</td>

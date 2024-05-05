@@ -4,6 +4,19 @@ import './App.css';
 import { UserTable } from './components/UsersTable';
 import { SORTBY, type User } from './types.d';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const anotherWay = async (page: number): Promise<[Error?, User[]?]> => {
+	try {
+		const {
+			data: { results },
+		} = await axios.get(`https://randomuser.me/api/?seed=mrg&results=10&page=${page}`);
+		return [undefined, results];
+	} catch (e) {
+		if (e instanceof AxiosError) return [e, undefined];
+		return [new Error('unkown error'), undefined];
+	}
+};
+
 const fetchUsers = async (page: number) => {
 	return await axios
 		.get(`https://randomuser.me/api/?seed=mrg&results=10&page=${page}`)
